@@ -1,0 +1,33 @@
+name: flutter_app
+description: "App tài xế (shipper) - gọi API Gateway của hệ thống giao hàng."
+publish_to: 'none'
+version: 1.0.0+1
+
+environment:
+  sdk: ^3.13.2
+
+dependencies:
+  flutter:
+    sdk: flutter
+  cupertino_icons: ^1.0.8
+
+  # Quản lý state đơn giản (ChangeNotifier + Provider) - dễ hiểu cho người mới học Flutter.
+  provider: ^6.1.2
+  # Gọi REST API tới API Gateway.
+  http: ^1.2.2
+  # Lưu accessToken/refreshToken an toàn (mã hoá), thay vì lưu file thường.
+  flutter_secure_storage: ^9.2.2
+  # Lấy vị trí GPS của tài xế để gửi lên PUT /api/driver/me/location.
+  geolocator: ^13.0.1
+  # Mở app Google Maps/Apple Maps có sẵn trên máy để chỉ đường (không cần API key).
+  url_launcher: ^6.3.1
+  # Định dạng ngày giờ, số tiền hiển thị cho đẹp.
+  intl: ^0.19.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0
+
+flutter:
+  uses-material-design: true
