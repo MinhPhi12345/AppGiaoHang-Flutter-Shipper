@@ -23,6 +23,7 @@ dependencies:
   url_launcher: ^6.3.1
   # Định dạng ngày giờ, số tiền hiển thị cho đẹp.
   intl: ^0.19.0
+  flutter_svg: ^2.0.10+1
 
 dev_dependencies:
   flutter_test:
@@ -31,3 +32,6 @@ dev_dependencies:
 
 flutter:
   uses-material-design: true
+  assets:
+    - lib/assets/Images/
+    - lib/assets/Icon/

@@ -6,6 +6,7 @@ import 'screens/login_screen.dart';
 import 'screens/offer_screen.dart';
 import 'screens/order_detail_screen.dart';
 import 'screens/profile_screen.dart';
+import 'screens/start_screen.dart';
 import 'theme/app_theme.dart';
 
 void main() {
@@ -21,9 +22,7 @@ class MyApp extends StatelessWidget {
       title: 'App Tài Xế',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.light,
-      // TODO: khi có SessionProvider thật, thay _DevMenu bằng luồng đăng nhập
-      // thật (ví dụ bọc MultiProvider ở đây rồi home: AuthGate()).
-      home: const _DevMenu(),
+      home: const StartScreen(),
     );
   }
 }
