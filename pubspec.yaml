@@ -23,6 +23,14 @@ dependencies:
   url_launcher: ^6.3.1
   # Định dạng ngày giờ, số tiền hiển thị cho đẹp.
   intl: ^0.19.0
+  # Bản đồ xem trước (vị trí tài xế + điểm lấy/giao hàng) - vector tile
+  # MapLibre, dùng nguồn OpenFreeMap (openfreemap.org): hoàn toàn miễn phí,
+  # không cần API key/thẻ tín dụng, không giới hạn request. Chỉ hỗ trợ
+  # Android/iOS/Web, KHÔNG hỗ trợ Windows/macOS/Linux desktop.
+  maplibre_gl: ^0.27.0
+  # Nút "trượt để xác nhận" kiểu Grab/ShopeeFood, dùng cho việc đổi trạng thái
+  # chuyến giao hàng ở ActiveDeliveryScreen.
+  slide_to_act: ^2.0.2
 
 dev_dependencies:
   flutter_test:

@@ -1,13 +1,33 @@
-/// KHUNG - chưa có logic thật, cần triển khai.
-///
-/// Đại diện cho lỗi mà backend trả về theo format chung toàn hệ thống:
+/// Đại diện cho lỗi mà backend trả về theo đúng format chung của hệ thống:
 ///   { "code": "ORDER_NOT_FOUND", "message": "Không tìm thấy đơn hàng.", "details": null }
-///
-/// Cần có:
-/// - Field: statusCode (int, mã HTTP), code (String), message (String), details (dynamic).
-/// - Factory `ApiException.fromJson(int statusCode, Map<String, dynamic> json)` để
-///   dựng từ JSON lỗi backend trả về.
-/// - Factory `ApiException.unknown()` dùng khi mất mạng / không parse được JSON.
 class ApiException implements Exception {
-  // TODO: implement
+  final int statusCode;
+  final String code;
+  final String message;
+  final dynamic details;
+
+  ApiException({
+    required this.statusCode,
+    required this.code,
+    required this.message,
+    this.details,
+  });
+
+  factory ApiException.fromJson(int statusCode, Map<String, dynamic> json) {
+    return ApiException(
+      statusCode: statusCode,
+      code: json['code']?.toString() ?? 'UNKNOWN_ERROR',
+      message: json['message']?.toString() ?? 'Đã có lỗi xảy ra.',
+      details: json['details'],
+    );
+  }
+
+  factory ApiException.unknown([String? message]) => ApiException(
+        statusCode: 0,
+        code: 'UNKNOWN_ERROR',
+        message: message ?? 'Không thể kết nối tới máy chủ. Kiểm tra mạng và thử lại.',
+      );
+
+  @override
+  String toString() => 'ApiException($code): $message';
 }
