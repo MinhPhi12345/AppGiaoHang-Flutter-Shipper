@@ -1,7 +1,7 @@
-import 'dart:convert';
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
-import '../core/app_config.dart';
+import '../core/api_client.dart';
+import '../core/api_exception.dart';
+import '../core/session_store.dart';
 import 'home_screen.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -33,45 +33,39 @@ class _LoginScreenState extends State<LoginScreen> {
     });
 
     try {
-      final url = Uri.parse('${AppConfig.apiBaseUrl}/api/identity/login');
-      final response = await http.post(
-        url,
-        headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({
+      // Gọi qua ApiClient (không cần token cho API login)
+      final data = await ApiClient.post(
+        '/api/identity/login',
+        body: {
           'email': email,
           'password': password,
-        }),
+        },
+        requiresAuth: false,
       );
 
-      if (!mounted) return;
+      // Lưu tokens vào bộ nhớ bảo mật
+      final String accessToken = data['accessToken'] ?? '';
+      final String refreshToken = data['refreshToken'] ?? '';
 
-      if (response.statusCode == 200) {
-        // Đăng nhập thành công, chuyển sang HomeScreen
-        Navigator.of(context).pushReplacement(
-          MaterialPageRoute(builder: (_) => const HomeScreen()),
-        );
-      } else {
-        // Lỗi đăng nhập, hiển thị thông báo lỗi từ backend
-        String errorMessage = 'Đăng nhập thất bại (Mã lỗi: ${response.statusCode})';
-        try {
-          final decoded = jsonDecode(response.body);
-          if (decoded['message'] != null) {
-            errorMessage = decoded['message'];
-          }
-        } catch (_) {}
-
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(errorMessage),
-            backgroundColor: Colors.red,
-          ),
+      if (accessToken.isNotEmpty) {
+        await SessionStore.saveTokens(
+          accessToken: accessToken,
+          refreshToken: refreshToken,
         );
       }
+
+      if (!mounted) return;
+      // Chuyển sang HomeScreen
+      Navigator.of(context).pushReplacement(
+        MaterialPageRoute(builder: (_) => const HomeScreen()),
+      );
     } catch (e) {
       if (!mounted) return;
+      String errorMessage = e is ApiException ? e.message : 'Lỗi kết nối: ${e.toString()}';
+      
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Lỗi kết nối: ${e.toString()}'),
+          content: Text(errorMessage),
           backgroundColor: Colors.red,
         ),
       );
