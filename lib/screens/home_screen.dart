@@ -3,8 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:geolocator/geolocator.dart';
-import 'package:http/http.dart' as http;
-import '../core/app_config.dart';
+import '../core/api_client.dart';
+import '../core/api_exception.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -19,17 +19,54 @@ class _HomeScreenState extends State<HomeScreen> {
   bool _isOnline = false; // Trạng thái mặc định chỉ có map, không tìm đơn
   String _locationError = '';
 
+  String _driverName = 'Đang tải...';
+  String _driverRating = 'Tài xế • ★ 4.9';
+
   @override
   void initState() {
     super.initState();
+    _fetchProfile();
     _determinePosition();
+  }
+
+  Future<void> _fetchProfile() async {
+    try {
+      final data = await ApiClient.get('/api/identity/me');
+      if (mounted) {
+        setState(() {
+          _driverName = data['username'] ?? data['name'] ?? data['fullName'] ?? 'Tài xế';
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _driverName = 'Lỗi kết nối';
+        });
+      }
+    }
+  }
+
+  Future<void> _updateLocationToServer(Position position) async {
+    try {
+      await ApiClient.put(
+        '/api/driver/me/location',
+        body: {
+          'latitude': position.latitude,
+          'longitude': position.longitude,
+          'accuracyM': position.accuracy,
+          'recordedAt': DateTime.now().toUtc().toIso8601String(),
+        },
+      );
+      print('Location updated to server successfully.');
+    } catch (e) {
+      print('Failed to update location to server: $e');
+    }
   }
 
   Future<void> _determinePosition() async {
     bool serviceEnabled;
     LocationPermission permission;
 
-    // Test if location services are enabled.
     serviceEnabled = await Geolocator.isLocationServiceEnabled();
     if (!serviceEnabled) {
       setState(() {
@@ -68,6 +105,8 @@ class _HomeScreenState extends State<HomeScreen> {
           _currentPosition = LatLng(position.latitude, position.longitude);
           _isLoadingLocation = false;
         });
+        // Bắn tọa độ lên Server
+        _updateLocationToServer(position);
       }
     } catch (e) {
       if (mounted) {
@@ -86,18 +125,11 @@ class _HomeScreenState extends State<HomeScreen> {
     });
 
     try {
-      final url = Uri.parse('${AppConfig.apiBaseUrl}/api/driver/me/availability');
-      final response = await http.patch(
-        url,
-        headers: {'Content-Type': 'application/json'},
-        // Gửi status AVAILABLE hoặc OFFLINE theo chuẩn enum
-        body: jsonEncode({'status': value ? 'AVAILABLE' : 'OFFLINE'}),
+      await ApiClient.patch(
+        '/api/driver/me/availability',
+        body: {'availabilityStatus': value ? 'AVAILABLE' : 'OFFLINE'},
       );
 
-      if (response.statusCode >= 400) {
-        throw Exception('Server returned ${response.statusCode}');
-      }
-      
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -112,9 +144,10 @@ class _HomeScreenState extends State<HomeScreen> {
         setState(() {
           _isOnline = !value;
         });
+        String errorMessage = e is ApiException ? e.message : 'Lỗi hệ thống';
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Không thể cập nhật trạng thái: $e'),
+            content: Text('Không thể cập nhật trạng thái: $errorMessage'),
             backgroundColor: Colors.red,
           ),
         );
@@ -186,26 +219,25 @@ class _HomeScreenState extends State<HomeScreen> {
           const CircleAvatar(
             radius: 24,
             backgroundColor: Colors.white,
-            // child: Image.network(...) nếu có ảnh avatar
             child: Icon(Icons.person, color: Colors.grey, size: 32),
           ),
           const SizedBox(width: 12),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
-              children: const [
+              children: [
                 Text(
-                  'Nguyễn Văn Hùng',
-                  style: TextStyle(
+                  _driverName,
+                  style: const TextStyle(
                     color: Colors.white,
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
-                SizedBox(height: 4),
+                const SizedBox(height: 4),
                 Text(
-                  'Tài xế • ★ 4.9',
-                  style: TextStyle(
+                  _driverRating,
+                  style: const TextStyle(
                     color: Colors.white70,
                     fontSize: 12,
                   ),
@@ -244,9 +276,8 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
           children: [
             TileLayer(
-              // Sử dụng OpenStreetMap (Raster tiles) là giải pháp phổ biến và ổn định nhất cho flutter_map
               urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
-              userAgentPackageName: 'com.example.app', // Thay bằng package name thật của bạn
+              userAgentPackageName: 'com.example.app',
             ),
             MarkerLayer(
               markers: [
@@ -281,7 +312,6 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
           ],
         ),
-        // Banner trạng thái: Chỉ hiển thị khi đang bật nhận đơn (isOnline == true)
         if (_isOnline)
           Positioned(
             top: 16,
