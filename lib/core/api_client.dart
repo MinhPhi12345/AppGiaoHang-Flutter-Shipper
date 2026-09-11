@@ -75,4 +75,14 @@ class ApiClient {
     );
     return _processResponse(response);
   }
+  static Future<dynamic> put(String path, {dynamic body, bool requiresAuth = true}) async {
+    final url = Uri.parse('${AppConfig.apiBaseUrl}$path');
+    final headers = await _getHeaders(requiresAuth: requiresAuth);
+    final response = await http.put(
+      url,
+      headers: headers,
+      body: body != null ? jsonEncode(body) : null,
+    );
+    return _processResponse(response);
+  }
 }
