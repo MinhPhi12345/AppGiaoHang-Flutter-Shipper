@@ -13,7 +13,7 @@ class AppConfig {
 
   /// Đổi IP này thành IP LAN thật của máy bạn khi test trên điện thoại thật
   /// (xem bằng lệnh `ipconfig` trên Windows, tìm dòng IPv4 Address).
-  static const String _lanIp = '192.168.1.5';
+  static const String _lanIp = '192.168.1.59';
 
   static const int gatewayPort = 6200;
 
@@ -25,7 +25,7 @@ class AppConfig {
   /// Base URL đầy đủ, ví dụ: http://localhost:6200
   static String get apiBaseUrl {
     if (kIsWeb) {
-      return 'http://localhost:$gatewayPort';
+      return 'http://127.0.0.1:$gatewayPort';
     }
     if (Platform.isAndroid) {
       return _isRealAndroidDevice
@@ -33,6 +33,6 @@ class AppConfig {
           : 'http://10.0.2.2:$gatewayPort';
     }
     // iOS simulator, Windows desktop, macOS... đều dùng chung máy host.
-    return 'http://localhost:$gatewayPort';
+    return 'http://127.0.0.1:$gatewayPort';
   }
 }
